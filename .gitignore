@@ -49,3 +49,6 @@ scratchpad
 # Ignore GPT Engineer files
 projects
 !projects/example
+instructions.bak
+scratch copy.txt
+scratch.txt
