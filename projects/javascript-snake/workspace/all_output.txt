@@ -1,0 +1,159 @@
+Let's start with the entry point file, which is `index.html`. This file will include the game canvas and scripts for the model, view, and controller.
+
+index.html
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake Game</title>
+    <style>
+        #game-board {
+            position: relative;
+            height: 400px;
+            width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game-board"></canvas>
+    <script src="model.js"></script>
+    <script src="view.js"></script>
+    <script src="controller.js"></script>
+</body>
+</html>
+```
+
+Next, let's create the `model.js` file. This file will handle the game logic.
+
+model.js
+```javascript
+class Game {
+    constructor() {
+        this.gridSize = 20;
+        this.snake = [{ top: 10, left: 10 }];
+        this.direction = 'RIGHT';
+        this.food = null;
+    }
+
+    // Method to update the snake's position based on the current direction
+    updateSnake() {
+        const head = Object.assign({}, this.snake[0]); // copy head
+
+        switch (this.direction) {
+            case 'LEFT':
+                head.left--;
+                break;
+            case 'UP':
+                head.top--;
+                break;
+            case 'RIGHT':
+                head.left++;
+                break;
+            case 'DOWN':
+                head.top++;
+                break;
+        }
+
+        this.snake.unshift(head); // add new head to snake
+    }
+
+    // Method to check if the snake has eaten the food
+    checkFood() {
+        if (this.food && this.snake[0].top === this.food.top && this.snake[0].left === this.food.left) {
+            this.food = null; // remove food
+        } else {
+            this.snake.pop(); // remove tail
+        }
+    }
+
+    // Method to check if the game is over
+    isGameOver() {
+        const head = this.snake[0];
+        return head.top < 0 || head.left < 0 || head.top >= this.gridSize || head.left >= this.gridSize || this.snake.some((_, i) => i !== 0 && _.top === head.top && _.left === head.left);
+    }
+
+    // Method to change the direction of the snake
+    changeDirection(newDirection) {
+        const directions = {
+            'UP': 'DOWN',
+            'RIGHT': 'LEFT',
+            'DOWN': 'UP',
+            'LEFT': 'RIGHT'
+        };
+
+        if (directions[newDirection] !== this.direction) {
+            this.direction = newDirection;
+        }
+    }
+}
+```
+
+Next, let's create the `view.js` file. This file will handle the rendering of the game state.
+
+view.js
+```javascript
+class View {
+    constructor(game, gameBoard) {
+        this.game = game;
+        this.gameBoard = gameBoard;
+        this.context = this.gameBoard.getContext('2d');
+        this.cellSize = this.gameBoard.width / this.game.gridSize;
+    }
+
+    // Method to draw the game state
+    draw() {
+        this.context.clearRect(0, 0, this.gameBoard.width, this.gameBoard.height); // clear canvas
+
+        // draw snake
+        this.game.snake.forEach(part => {
+            this.context.fillStyle = 'green';
+            this.context.fillRect(part.left * this.cellSize, part.top * this.cellSize, this.cellSize, this.cellSize);
+        });
+
+        // draw food
+        if (this.game.food) {
+            this.context.fillStyle = 'red';
+            this.context.fillRect(this.game.food.left * this.cellSize, this.game.food.top * this.cellSize, this.cellSize, this.cellSize);
+        }
+    }
+}
+```
+
+Finally, let's create the `controller.js` file. This file will handle user inputs.
+
+controller.js
+```javascript
+window.onload = function() {
+    const game = new Game();
+    const view = new View(game, document.getElementById('game-board'));
+
+    // Function to update the game state and redraw the game board
+    function update() {
+        game.updateSnake();
+        game.checkFood();
+        view.draw();
+
+        if (game.isGameOver()) {
+            clearInterval(intervalId);
+        }
+    }
+
+    const intervalId = setInterval(update, 100);
+
+    // Event listener for arrow keys
+    window.onkeydown = function(event) {
+        const directions = {
+            'ArrowUp': 'UP',
+            'ArrowRight': 'RIGHT',
+            'ArrowDown': 'DOWN',
+            'ArrowLeft': 'LEFT'
+        };
+
+        if (directions[event.key]) {
+            game.changeDirection(directions[event.key]);
+        }
+    };
+};
+```
+
+This completes the implementation of the snake game in JavaScript using the MVC pattern. The game logic is handled by the `Game` class in `model.js`, the game state is rendered by the `View` class in `view.js`, and user inputs are handled by the `controller.js` file. The game starts when the page is loaded and ends when the snake hits the border or itself. The snake's direction can be controlled using the arrow keys.
